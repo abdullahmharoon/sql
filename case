@@ -1,0 +1,9 @@
+SELECT e.first_name, e.last_name, e.salary,department_id,id as employeeID
+,project_id, 
+  CASE 
+        WHEN e.salary < 30000 THEN 'Low' 
+        WHEN e.salary >= 30000 AND e.salary <= 50000 THEN 'Average' 
+        WHEN e.salary > 50000 THEN 'High' 
+  END evaluation 
+FROM employees   AS e 
+JOIN employees_projects as p ON e.department_id=p.project_id 
