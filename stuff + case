@@ -1,0 +1,93 @@
+SELECT DISTINCT TOP (100)ENGAGEMENT__C.ID AS ENGAGEMENT_ID,
+       ENG_VP__C.ID AS VALUATION_PERIOD_ID,
+       evp.ID POSITION_ID,
+       ENGAGEMENT__C.NAME AS ENGAGEMENT_NAME,
+       ENG_VP__C.NAME AS VALUATION_PERIOD_NAME,
+       evp.NAME AS POSITION_NAME,
+          evp.INDUSTRY_GROUP__C,
+       COMPANY__C AS COMPANY,
+       ASSET_CLASSES__C AS ASSET_CLASS,
+       CAST(evp.CREATEDDATE AS date) AS CREATED_DATE,
+       CAST(COMPLETED_DATE__C AS date) AS COMPLETED_DATE,
+	   FEE_COMPLETED__C AS FEE_COMPLETED,
+	  STUFF(
+           (   SELECT   ',' + NAME
+               FROM     Salesforce.dbo.ENG_VP_TEAMMEMBER__C
+               WHERE    ENGAGEMENT_VP_POSITION__C = evp.ID
+                   AND ROLE__C = 'Analyst'
+               ORDER BY NAME
+               FOR XML PATH(''), TYPE ).value('.', 'varchar(max)') ,
+           1 ,
+           1 ,
+           '') AS ANALYST,
+       STUFF(
+           (   SELECT   ',' + NAME
+               FROM     Salesforce.dbo.ENG_VP_TEAMMEMBER__C
+               WHERE    ENGAGEMENT_VP_POSITION__C = evp.ID
+                   AND ROLE__C = 'Associate'
+               ORDER BY NAME
+               FOR XML PATH(''), TYPE ).value('.', 'varchar(max)') ,
+           1 ,
+           1 ,
+           '') AS ASSOCIATE,
+       STUFF(
+           (   SELECT   ',' + NAME
+               FROM     Salesforce.dbo.ENG_VP_TEAMMEMBER__C
+               WHERE    ENGAGEMENT_VP_POSITION__C = evp.ID
+                   AND ROLE__C = 'Principal'
+               ORDER BY NAME
+               FOR XML PATH(''), TYPE ).value('.', 'varchar(max)') ,
+           1 ,
+           1 ,
+           '') AS PRINCIPAL,
+       STUFF(
+           (   SELECT   ',' + NAME
+               FROM     Salesforce.dbo.ENG_VP_TEAMMEMBER__C
+               WHERE    ENGAGEMENT_VP_POSITION__C = evp.ID
+                   AND ROLE__C = 'Manager'
+               ORDER BY NAME
+               FOR XML PATH(''), TYPE ).value('.', 'varchar(max)') ,
+           1 ,
+           1 ,
+           '') AS MANAGER,
+       STUFF(
+           (   SELECT   ',' + NAME
+               FROM     Salesforce.dbo.ENG_VP_TEAMMEMBER__C
+               WHERE    ENGAGEMENT_VP_POSITION__C = evp.ID
+                   AND ROLE__C = 'Industry'
+               ORDER BY NAME
+               FOR XML PATH(''), TYPE ).value('.', 'varchar(max)') ,
+           1 ,
+           1 ,
+           '') AS INDUSTRY,
+	  STUFF(
+           (   SELECT   FULL_CONTACT_ID__C 
+               FROM     [Salesforce].[dbo].[CONTACT]
+			   WHERE    FULL_CONTACT_ID__C  = FULL_CONTACT_ID__C 
+			   FOR XML PATH(''), TYPE ).value('.', 'varchar(max)') ,
+		   1,
+		   1,
+		   '') CONTACT_ID,
+	   STUFF(  
+		   ( SELECT   START_DATE__C
+               FROM     Salesforce.dbo.ENG_VP_TEAMMEMBER__C
+			   WHERE    START_DATE__C  = START_DATE__C
+			   FOR XML PATH(''), TYPE ).value('.', 'varchar(max)') ,
+		   1,
+		   1,
+		   '') START_DATE,
+	   STUFF(  
+		   ( SELECT   END_DATE__C
+               FROM     Salesforce.dbo.ENG_VP_TEAMMEMBER__C
+			   WHERE    END_DATE__C  = END_DATE__C
+			   FOR XML PATH(''), TYPE ).value('.', 'varchar(max)') ,
+		   1,
+		   1,
+		   '') END_DATE
+
+FROM   Salesforce.dbo.ENG_VP_POSITION__C evp
+       INNER JOIN Salesforce.dbo.ENG_VP__C ON ENG_VP__C.ID = evp.ENGAGEMENT_VP__C
+       INNER JOIN Salesforce.dbo.ENGAGEMENT__C ON ENGAGEMENT__C.ID = ENG_VP__C.ENGAGEMENT__C
+
+WHERE  evp.STATUS__C = 'Completed, Generate Accrual'
+    AND evp.COMPLETED_DATE__C BETWEEN '10/01/2017' AND '3/31/2018';
