@@ -1,0 +1,40 @@
+!Tracked Ads
+{ FIXED [Brand],[Campaign Name],[Day1],[Country],[Device],[Device Family],[Creative Type],[Clickthrough],[!Planned Impressions],[Video ID],[Measurable Impressions],[Viewable impression (IAB)],[Engagement],[Video Duration],[Video Completion 100%],[Video Completion 25%],[Video Completion 50%],[Video Completion 75%]: MIN([Delivered Impressions])}
+ 
+!P2+
+{ INCLUDE [Demos]:
+IF CONTAINS(MIN([Demos]),"Person")
+THEN SUM([!Tracked Ads])
+END
+}
+ 
+!P18+
+{ INCLUDE [Demos]:
+IF MIN([Demos])="Persons 18+"
+THEN SUM([!Tracked Ads])
+END
+}
+ 
+!P18-39 Impressions
+{ INCLUDE [Demos]:
+IF MIN([Demos])="Persons 18-20"
+OR MIN([Demos])="Persons 21-24"
+OR MIN([Demos])="Persons 25-29"
+OR MIN([Demos])="Persons 30-34"
+OR MIN([Demos])="Persons 35-39"
+THEN SUM([!Tracked Ads])
+END
+}
+ 
+!%IMPS P18+
+(SUM([!P18+])/SUM([!P2+]))
+ 
+!P18 + Delivered Imps
+SUM([!Delivered Impressions]) * [!%IMPS P18+]
+ 
+P18 + Pacing to Date
+[!P18 + Delivered Imps]/[P18 + Planned Impressions]
+ 
+!P18-39 In-Demo%
+{ FIXED [Publisher Name] :MIN([P18-39])}
+ 
