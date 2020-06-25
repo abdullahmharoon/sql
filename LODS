@@ -38,3 +38,14 @@ P18 + Pacing to Date
 !P18-39 In-Demo%
 { FIXED [Publisher Name] :MIN([P18-39])}
  
+ IF Statement Clause
+ if(sum([Cleared $$])/sum(round([Web Visits],2)))>sum([Cleared $$]) then 0 ELSE
+(sum([Cleared $$])/sum(round([Web Visits],2)))
+end
+
+
+// Adjusted_WOMEN % DEMO BREAK and creating a IF Statment within LOD expression
+
+IF [Brand] = "CASCADE" THEN [Women Total]/[Total Measured]
+ELSE [Women Total]/[Total Measured] 
+END
