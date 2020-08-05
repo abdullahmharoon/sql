@@ -1,0 +1,12 @@
+SELECT distinct e.first_name, e.last_name, e.salary,d.name as department_
+name, 
+CASE 
+      when e.salary <= 30000 then 'low' 
+      when e.salary >= 50000 and e.salary < 80000 then 'Average' 
+      when e.salary >= 80000 then 'High' 
+  END evaluation, 
+SUM(salary) OVER (PARTITION BY salary) as TOTAL_SALARY 
+FROM employees   AS e 
+JOIN departments AS d ON e.department_id=d.id 
+JOIN employees_projects as p ON e.department_id=p.project_id 
+order by TOTAL_SALARY 
