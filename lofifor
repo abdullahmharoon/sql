@@ -1,0 +1,16 @@
+{INCLUDE [Demos]:
+IF MIN([Demos])="Person 2-12"
+OR MIN([Demos])="Persons 13-17"
+OR MIN([Demos])="Persons 18-20"
+OR MIN([Demos])="Persons 21-24"
+OR MIN([Demos])="Persons 25-29"
+OR MIN([Demos])="Persons 30-34"
+OR MIN([Demos])="Persons 35-39"
+OR MIN([Demos])="Persons 40-44"
+OR MIN([Demos])="Persons 45-49"
+OR MIN([Demos])="Persons 50-54"
+OR MIN([Demos])="Persons 55-64"
+OR MIN([Demos])="Persons 65+"
+THEN SUM([!Tracked Ads])
+END
+}
