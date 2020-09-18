@@ -268,3 +268,96 @@ grant usage on database weather to role junior_dba;
 
 use role junior_dba;
 
+list @WO_LOAD_SF;
+List @WO_TEMP_SF;
+
+-----------------Create New Table Structure---------------------
+create or replace table VW_SPOTRATING_DV2 (
+	Advertiser string,
+	"Product Category" string ,
+	"Air Year(BD)" date,
+	"Air M# (BD)" int,
+	market string,
+	Tier string,
+	TV int,
+	Radio int,
+	Digital int,
+	Net_Revenue int,
+    Gross_Revenue int);
+
+------------Delete month Data
+delete from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" where full_date between  '2019-12-01'and '2019-12-31';
+delete from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_TEMP" where full_date between  '2019-12-01'and '2019-12-31';
+delete from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_ALL" where full_date between  '2019-12-01'and '2019-12-31';
+Truncate "WO"."LOAD"."FACT_VW_SPOTRATINGDV_TEMP";
+
+-------------------Recover Table
+create or replace table VW_SPOTRATING_DV2 clone "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" before (statement => '0196ffbb-0603-26ab-0000-32a100bcdcfa');
+select * from VW_SPOTRATING_DV2;
+alter table "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" swap with VW_SPOTRATING_DV2;
+insert into "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" select * from VW_SPOTRATING_DV2;
+
+
+-----------Query for Month Data
+select * from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" where full_date between '2019-12-01'and '2019-12-31';
+select * from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_TEMP" where full_date between '2019-12-01'and '2019-12-31';
+select * from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_ALL" where full_date between '2019-12-01'and '2019-12-31';
+
+-----------------Insert Into----------------------
+INSERT INTO "WO"."LOAD"."FACT_VW_SPOTRATINGDV_ALL";
+
+--------Query ALL----------------
+select * from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" FETCH FIRST 10000 ROWS ONLY;
+select * from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_TEMP" FETCH FIRST 10000 ROWS ONLY;
+select * from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_PAST";
+
+--------------------Determine Count per month---
+select count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_ALL" where full_date between '2019-12-01' and  '2019-12-31'; 
+select count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" where full_date between '2019-12-01' and  '2019-12-30'; 
+select count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_TEMP" where full_date between'2019-12-01' and '2019-12-30'; 
+
+--------------------Determine Count per day for a specific month---
+Select full_date, COUNT(*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_TEMP"
+where full_date between '2019-12-01' and '2019-12-31'
+group by full_date
+order by full_date ASC; 
+
+Select full_date, COUNT(*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT"
+where full_date between '2019-12-01' and '2019-12-31'
+group by full_date
+order by full_date ASC; 
+  
+select DATA_UPDATE_DATE, count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" where full_date between '2019-09-01' and '2019-09-30'
+group by DATA_UPDATE_DATE
+order by DATA_UPDATE_DATE ASC; 
+
+--------------------Determine count per year----------------  
+select year(full_date) as years, count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT"
+group by year(full_date)
+order by year(full_date)  ASC;
+
+-------------------------Determine Row Count per Month for a Year Duration------------------------
+select substr(full_date,1,7) as year_months, count(*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT"
+where full_date between '2019-01-01' and '2019-12-31'
+group by substr(full_date,1,7)
+order by 1 ASC;
+
+
+--------------------Count for WO Tables---
+SELECT count (*) FROM "WO"."LOAD"."FACT_VW_SPOTRATINGDV_TEMP";
+select count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_ALL";
+select count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT";
+
+--------------------Select Records that duplicate from Current to ALL---
+select SPOT_ID from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" 
+WHERE SPOT_ID IN (SELECT SPOT_ID FROM"WO"."LOAD"."FACT_VW_SPOTRATINGDV_ALL") and full_date between '2019-10-1' and '2019-10-31';
+
+select count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" 
+WHERE SPOT_ID IN (SELECT SPOT_ID FROM"WO"."LOAD"."FACT_VW_SPOTRATINGDV_ALL") and full_date between '2019-10-1' and '2019-10-31';
+
+select count (*) from "WO"."LOAD"."FACT_VW_SPOTRATINGDV_CURRENT" 
+WHERE SPOT_ID NOT IN (SELECT SPOT_ID FROM"WO"."LOAD"."FACT_VW_SPOTRATINGDV_ALL") and full_date between '2019-10-1' and '2019-10-31';
+
+
+
+
