@@ -1,0 +1,88 @@
+
+WITH CTE_SPOT as (
+SELECT DISTINCT 
+v.[Spot ID]
+, v.[Advertiser]
+, o.[agency_key]
+, v.[Agency]
+, o.[advertiser_key]
+,v.[full_date]
+,o.[order_key]
+
+, CASE
+	WHEN v.[Advertiser] = v.[Agency] THEN 'Direct'
+	WHEN v.[Advertiser] != v.[Agency] THEN 'Indirect'
+	ELSE 'Agency'
+  END as Advr_Type
+	
+, o.order_number
+, v.[Product Category]
+, v.[Product Sub-Category]
+
+, CASE
+	WHEN v.[Sales Region] = 'LOCAL' THEN v.[market]
+	ELSE 'National'
+	END as Market
+
+, CASE
+	WHEN v.[format] = '' THEN 'Digital'
+	ELSE v.[Format]
+  END as [Format]
+
+FROM vw_SpotRatingDV v
+inner join fact_Spot t on v.[Spot ID] = t.spot_key
+INNER JOIN dim_order o ON v.order_key=o.order_key
+
+WHERE v.[Air Year (BD)] > 2018
+)
+
+SELECT *
+
+FROM (
+( SELECT DISTINCT
+v.[Advertiser] as Account
+,max(full_date) over(partition by v.Advertiser_key)  AS LastOrderDate
+,address_line1
+,address_city
+,address_state
+,address_zipcode
+,v.[Agency] as Original_Agency
+, b.advertiser_key  as WO_ID
+, a.tcode as SF_ID
+, v.Advr_Type as Account_Type
+, v.[market]
+, v.[format]
+, v.[Product Category]
+, v.[Product Sub-Category]
+
+FROM CTE_SPOT v
+INNER JOIN dim_advertiser a on v.[advertiser_key] = a.advertiser_key
+INNER JOIN DIM_ORDER b ON v.order_key=b.order_key
+--WHERE v.Advr_Type='' 
+)
+
+UNION
+
+( SELECT DISTINCT
+v.[Agency] as Account
+,max(full_date) over(partition by v.Agency_key)  AS LastOrderDate
+,address_line1
+,address_city
+,address_state
+,address_zipcode
+,v.[Agency] as Original_Agency
+, b.[agency_key] as WO_ID
+, a.tcode as SF_ID
+, 'Agency' as Account_Type
+, v.[market]
+, v.[format]
+, v.[Product Category]
+, v.[Product Sub-Category]
+
+FROM CTE_SPOT v
+inner join dim_agency a on v.[agency_key] = a.agency_key
+INNER JOIN DIM_ORDER b ON v.order_key=b.order_key
+WHERE v.Advr_Type = 'Indirect'
+
+)
+) q
