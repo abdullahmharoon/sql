@@ -1,0 +1,1 @@
+[MediaWeek] >= DATEADD('week',-7,[Week]) AND [MediaWeek] <= [Week]
