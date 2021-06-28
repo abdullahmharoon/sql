@@ -1,0 +1,1 @@
+IFNULL([Destination URL],'https://electrameccanica.com') ---to replace null values
