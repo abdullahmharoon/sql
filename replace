@@ -1,0 +1,21 @@
+IF  STR([ClientName])='Beachbody LLC' THEN REPLACE('Beachbody LLC','Beachbody LLC', 'BEACHBODY, LLC') 
+ELSEIF STR([ClientName])='Great Healthworks' THEN REPLACE('Great Healthworks','Great Healthworks', 'GREAT HEALTH WORKS INC.')
+ELSEIF STR([ClientName])='Great Healthworks Inc.' THEN REPLACE('Great Healthworks Inc.','Great Healthworks Inc.', 'GREAT HEALTH WORKS INC.')
+ELSEIF STR([ClientName])='FinishLine Tax Solutions' THEN REPLACE('FinishLine Tax Solutions','FinishLine Tax Solutions', 'FINISHLINE TAX SOLUTIONS, LLC')
+ELSEIF STR([ClientName])='Infomercials, Inc' THEN REPLACE('Infomercials, Inc','Infomercials, Inc', 'INFOMERCIALS INC')
+ELSEIF STR([ClientName])='Inogen' THEN REPLACE('Inogen','Inogen', 'Inogen, Inc.')
+ELSEIF STR([ClientName])='INT. FELLOW OF CHRISTIANS/JEWS' THEN REPLACE('INT. FELLOW OF CHRISTIANS/JEWS','INT. FELLOW OF CHRISTIANS/JEWS', 'INTERNATIONAL FELLOWSHIP OF CHRISTIANS & JEWS, INC')
+ELSEIF STR([ClientName])='Intl Fllwshp Christians Jews' THEN REPLACE('Intl Fllwshp Christians Jews','Intl Fllwshp Christians Jews', 'INTERNATIONAL FELLOWSHIP OF CHRISTIANS & JEWS, INC')
+ELSEIF STR([ClientName])='Intl Fllwshp Christians Jews' THEN REPLACE('Intl Fllwshp Christians Jews','Intl Fllwshp Christians Jews', 'INTERNATIONAL FELLOWSHIP OF CHRISTIANS & JEWS, INC')
+ELSEIF STR([ClientName])='JD Mellberg' THEN REPLACE('JD Mellberg','JD Mellberg', 'JD MELLBERG FINANCIAL')
+ELSEIF STR([ClientName])='LifeBrands, Inc' THEN REPLACE('LifeBrands, Inc','LifeBrands, Inc', 'LIFEBRANDS, INC.')
+ELSEIF STR([ClientName])='d2H Partners' THEN REPLACE('d2H Partners','d2H Partners', 'D2H PARTNERS,LLC')
+ELSEIF STR([ClientName])='Lockard & Wechsler Direct' THEN REPLACE('Lockard & Wechsler Direct','Lockard & Wechsler Direct', 'LOCKARD & WECHSLER, INC')
+ELSEIF STR([ClientName])='National Media Connection' THEN REPLACE('National Media Connection','National Media Connection', 'NATIONAL MEDIA CONNECTION, LLC')
+ELSEIF STR([ClientName])='Relion Group / The Relion Group' THEN REPLACE('Relion Group / The Relion Group','Relion Group / The Relion Group', 'The Relion Group')
+ELSEIF STR([ClientName])='Relion Group' THEN REPLACE('Relion Group','Relion Group', 'The Relion Group')
+ELSEIF STR([ClientName])='Relion Group' THEN REPLACE('Relion Group','Relion Group', 'Relion Group / The Relion Group')
+
+
+ELSE [ClientName]
+END
