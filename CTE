@@ -1,0 +1,51 @@
+WITH user_counts AS (
+SELECT DISTINCT dateHourMinute as activitydate,  
+    COALESCE(users, 0) AS TotalUsers,
+    COALESCE(newUsers, 0) as NewUsers,
+    COALESCE(sessions, 0) as sessions,
+    COALESCE([transactions], 0) as Orders,
+    COALESCE([transactionRevenue], 0) as Revenue
+FROM [ClientAnalytics].[client_CHIL].[Activity_Kure_Web_]
+where sessions > 0
+),
+airings AS (
+select a.MediaWeek, a.StationCode, a.CreativeCode, a.CreativeVersion, a.Daypart, a.DayOfWeek, a.AiringDate, a.AiringDatetime, 
+       LEAD(a.AiringDatetime, 1, 0) over (ORDER BY a.AiringDatetime) AS NextAiring,
+       a.ClientCost as Spend, b.Visits, a.ClientCode, a.CreativeType, b.ReportCode
+from DataWarehouse_Reporting_Prod.dbo.AiringsAndResponses a
+left join [ClientAnalytics].[attribution].[AttributionModel_v_1_0_AttributionByAiring] b on b.StationCode=a.StationCode and a.AiringDatetime=b.AiringDatetime
+where a.clientcode='CHIL' and a.CreativeType='Short Form' and b.ReportCode='Kure_Web_'
+)
+SELECT a.MediaWeek, a.StationCode, a.CreativeCode, a.CreativeVersion, a.Daypart, a.DayOfWeek, a.AiringDate, a.AiringDatetime, 
+       a.Spend, a.Visits, COALESCE(SUM(c.NewUsers), 0) AS NewUsers, COALESCE(SUM(c.TotalUsers), 0) - COALESCE(SUM(c.newUsers), 0) AS ReturingUsers, 
+       COALESCE(SUM(c.TotalUsers), 0) AS TotalUsers, COALESCE(SUM(c.sessions), 0) AS Sessions, COALESCE(SUM(c.Orders), 0) AS Orders, 
+       COALESCE(SUM(c.Revenue), 0) AS Revenue
+from airings a
+LEFT JOIN user_counts c ON a.AiringDatetime < c.activitydate AND (a.NextAiring >= c.activitydate OR a.NextAiring = '1900-01-01 00:0:00')
+WHERE a.clientcode='CHIL' and a.CreativeType='Short Form' and a.ReportCode='Kure_Web_'
+GROUP BY a.MediaWeek, a.StationCode, a.CreativeCode, a.CreativeVersion, a.Daypart, a.DayOfWeek, a.AiringDate, a.AiringDatetime,
+         a.Spend, a.Visits
+ORDER BY a.AiringDatetime;
+
+
+OUTPUT----
+
+
+
+MediaWeek	StationCode	CreativeCode	CreativeVersion	Daypart	DayOfWeek	AiringDate	AiringDatetime	Spend	Visits	NewUsers	ReturingUsers	TotalUsers	Sessions	Orders	Revenue
+2021-03-15	GRT	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	OverNight	Tuesday	2021-03-16	2021-03-16 03:32:00.000	1140.00	0.0	14	1	15	15	0	0
+2021-03-15	DSCL	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	OverNight	Tuesday	2021-03-16	2021-03-16 05:12:00.000	114.00	12.0	12	9	21	21	0	0
+2021-03-15	THSTV	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	DayTime	Tuesday	2021-03-16	2021-03-16 15:53:00.000	760.00	23.0	15	10	25	25	0	0
+2021-03-15	JSTCT	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	Prime Time	Tuesday	2021-03-16	2021-03-16 20:14:00.000	332.50	13.0	7	5	12	12	0	0
+2021-03-15	ANTV	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	OverNight	Wednesday	2021-03-17	2021-03-17 03:08:00.000	380.00	14.1	7	0	7	7	0	0
+2021-03-15	DSCL	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	OverNight	Wednesday	2021-03-17	2021-03-17 04:31:00.000	114.00	20.9	18	11	29	29	0	0
+2021-03-15	ANTV	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	OverNight	Thursday	2021-03-18	2021-03-18 01:33:00.000	475.00	87.0	50	13	63	63	0	0
+2021-03-15	JSTCT	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	Prime Time	Thursday	2021-03-18	2021-03-18 20:06:00.000	332.50	16.0	12	1	13	13	0	0
+2021-03-15	GETTV	TKF5FRTL5M	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	Prime Time	Thursday	2021-03-18	2021-03-18 22:53:00.000	1045.00	69.0	33	14	47	47	0	0
+2021-03-15	THSTV	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	DayTime	Friday	2021-03-19	2021-03-19 15:13:00.000	760.00	51.0	27	16	43	43	0	0
+2021-03-15	JSTCT	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	OverNight	Saturday	2021-03-20	2021-03-20 01:13:00.000	237.50	8.0	7	1	8	8	0	0
+2021-03-15	DSCL	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	Early Morning	Saturday	2021-03-20	2021-03-20 06:48:00.000	380.00	9.0	9	4	13	13	0	0
+2021-03-15	JSTCT	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	DayTime	Saturday	2021-03-20	2021-03-20 10:14:00.000	332.50	9.0	9	2	11	11	0	0
+2021-03-15	JSTCT	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	DayTime	Saturday	2021-03-20	2021-03-20 13:43:00.000	332.50	21.0	19	7	26	26	0	0
+2021-03-15	DSCL	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	OverNight	Sunday	2021-03-21	2021-03-21 04:38:00.000	114.00	3.0	3	0	3	3	0	0
+2021-03-15	DSCL	TKF5FRTL5MH	30 DAY FREE TRIAL V1 5M (Master 542555cc/H)	OverNight	Sunday	2021-03-21	2021-03-21 05:49:00.000	114.00	12.0	55	36	91	91	0	0
