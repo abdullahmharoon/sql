@@ -1,0 +1,129 @@
+USE BIC_Prod;
+GO
+
+
+SELECT sub.Title AS Show,
+       sub.ShowVersionTitle AS ShowVersion,
+       Description AS Media,
+       sub.MarketName AS DMA,
+       sub.MediastarStationCode AS StationCode,
+       Standard_Realtime_StartDate,
+       Standard_Realtime_StartDate_DOW,
+       Standard_Realtime_StartTime,
+       Local_StartDate,
+       Local_StartDate_DOW,
+       Local_StartTime,
+       sub.SalePrice AS Spend,
+       sub.Orders,
+       CASE
+           WHEN Orders = 0 THEN
+               0
+           ELSE
+               SUM(sub.SalePrice) / SUM(sub.Orders)
+       END AS CPO,
+       sub.Keyword
+FROM
+(
+    SELECT DISTINCT
+           ac.AutoID AS AvailClientId,
+           a.PI,
+           s.Title,
+           s.ShowVersionTitle,
+           m.Description,
+           ISNULL(d.MarketName, m.Description) MarketName,
+           CONVERT(VARCHAR(50), mc.Code) AS MediastarStationCode,
+           q.Standard_Realtime_StartDate,
+           q.Standard_Realtime_StartDate_DOW,
+           q.Standard_Realtime_StartTime,
+           q.Local_StartDate,
+           q.Local_StartDate_DOW,
+           q.Local_StartTime,
+           CONVERT(NUMERIC(10, 2), ac.SalePrice) AS SalePrice,
+           CAST(ac.PhoneNumberText AS BIGINT) AS PhoneNumber,
+           ac.Orders,
+           k.Keyword
+    FROM [dbo].[SYN_AvailClient] ac (NOLOCK)
+        JOIN dbo.SYN_Avail a (NOLOCK)
+            ON ac.AvailID = a.AutoID
+        JOIN dbo.SYN_MasterContact mc (NOLOCK)
+            ON ac.StationMask = mc.AutoID
+        JOIN dbo.SYN_Show s (NOLOCK)
+            ON ac.ShowVersionID = s.AutoID
+        JOIN BIC_Prod..MS_F_Schedule q (NOLOCK)
+            ON q.Avail_ID = a.AutoID
+        JOIN dbo.SYN_Market m
+            ON mc.STMarket = m.AutoID
+        LEFT JOIN dbo.SYN_DMA d
+            ON mc.STDMA = d.AutoID
+        LEFT JOIN dbo.SYN_vStations v
+            ON a.StationMask = v.AutoID
+        LEFT JOIN
+        (
+            SELECT DISTINCT
+                   REPLACE(REPLACE(do.DubComments, ' ', ''), 'KeyWord:', '') AS Keyword,
+                   vs.Code AS StationCode,
+                   s.ShowVersionTitle,
+                   do.Dub800
+            FROM BIC_MS_Lite_Prod.dbo.DubOrder do
+                INNER JOIN BIC_MS_Lite_Prod..vStations vs
+                    ON do.StationCode = vs.AutoID
+                LEFT JOIN BIC_MS_Lite_Prod.dbo.AvailClient ac
+                    ON ac.ShowVersionID = do.ShowID
+                       AND do.StationCode = ac.StationID
+                       AND do.Dub800 = ac.PhoneNumberText
+                LEFT JOIN BIC_MS_Lite_Prod.dbo.Avail a
+                    ON ac.AvailID = a.AutoID
+                LEFT JOIN BIC_MS_Lite_Prod.dbo.Show s
+                    ON do.ShowID = s.AutoID
+            WHERE do.ClientNo = 8433
+                  AND LTRIM(RTRIM(REPLACE(do.DubComments, ' ', ''))) LIKE '%KeyWord:%'
+            UNION ALL
+            SELECT DISTINCT
+                   REPLACE(REPLACE(do.DubComments, ' ', ''), 'KeyCode:', '') AS Keyword,
+                   vs.Code AS StationCode,
+                   s.ShowVersionTitle,
+                   do.Dub800
+            FROM BIC_MS_Lite_Prod.dbo.DubOrder do
+                INNER JOIN BIC_MS_Lite_Prod.dbo.vStations vs
+                    ON do.StationCode = vs.AutoID
+                LEFT JOIN BIC_MS_Lite_Prod.dbo.AvailClient ac
+                    ON ac.ShowVersionID = do.ShowID
+                       AND do.StationCode = ac.StationID
+                       AND do.Dub800 = ac.PhoneNumberText
+                LEFT JOIN BIC_MS_Lite_Prod.dbo.Avail a
+                    ON ac.AvailID = a.AutoID
+                LEFT JOIN BIC_MS_Lite_Prod.dbo.Show s
+                    ON do.ShowID = s.AutoID
+            WHERE do.ClientNo = 8433
+                  AND LTRIM(RTRIM(REPLACE(do.DubComments, ' ', ''))) LIKE '%KeyCode:%'
+                  AND ac.StatusID = 477
+                  AND s.ShowVersionTitle LIKE '%PIYO CHALENE AT Home%'
+        ) k
+            ON mc.Code = k.StationCode
+               AND s.ShowVersionTitle = k.ShowVersionTitle
+               AND ac.PhoneNumberText = k.Dub800
+    WHERE --a.AvailDateStart BETWEEN '01/01/2017' AND CAST(GETDATE() +10 AS date)
+        q.Standard_Realtime_StartDate
+        BETWEEN '04/05/2021' AND '04-11-2021'
+        AND ac.ClientID = 8433 --12835--13039
+        AND ac.StatusID IN ( 477, 480 )
+        AND CONVERT(VARCHAR(50), mc.Code) NOT IN ( 'WEB', 'DIGITAL' )
+        AND mc.Type = 2
+) sub
+GROUP BY sub.Title,
+         sub.ShowVersionTitle,
+         sub.Description,
+         sub.MarketName,
+         sub.MediastarStationCode,
+         sub.Standard_Realtime_StartDate,
+         sub.Standard_Realtime_StartDate_DOW,
+         sub.Standard_Realtime_StartTime,
+         sub.Local_StartDate,
+         sub.Local_StartDate_DOW,
+         sub.Local_StartTime,
+         sub.SalePrice,
+         sub.Orders,
+         sub.Keyword
+ORDER BY ShowVersion,
+         sub.Standard_Realtime_StartDate,
+         sub.Standard_Realtime_StartTime
