@@ -1,0 +1,45 @@
+select situsfullstreetaddress,
+ROW_NUMBER() OVER (ORDER BY situsfullstreetaddress ROWS BETWEEN 2 FOLLOWING AND UNBOUNDED FOLLOWING)  as OriginalCluster, COUNT(*) as ClusterGroup,
+(select COUNT(mailinghousebr) from "20211111_update") as TotalCount
+FROM "20211111_update"
+WHERE situsfullstreetaddress LIKE situsfullstreetaddress
+GROUP BY ROLLUP (situsfullstreetaddress)
+HAVING COUNT(*) > 1
+ORDER BY situsfullstreetaddress ASC NULLS LAST
+
+select situsfullstreetaddress,
+ROW_NUMBER() OVER (ORDER BY situsfullstreetaddress ROWS BETWEEN 2 FOLLOWING AND UNBOUNDED FOLLOWING)  as OriginalCluster, COUNT(*) AS ClusterGroup,
+(select COUNT(*) from "20211111_update") as TotalCount
+FROM "20211111_update",
+WHERE situsfullstreetaddress IN (select CONCAT(situshousenbr, ' ',situshousenbrsuffix, '',situsstreet,' ',situsmode) from "20211111_update")
+GROUP BY cube(situsfullstreetaddress)
+HAVING COUNT(*) > 1
+ORDER BY situsfullstreetaddress ASC NULLS LAST
+
+select situsfullstreetaddress,
+DENSE_RANK() OVER (PARTITION BY situshousenbr ORDER BY situsfullstreetaddress)  as OriginalCluster, COUNT(*) as ClusterID
+FROM "20211111_update"
+WHERE situsfullstreetaddress IN (select CONCAT(situshousenbr, ' ',situshousenbrsuffix, '',situsstreet,' ',situsmode) from "20211111_update")
+GROUP BY ROLLUP (situsfullstreetaddress,situshousenbr)
+HAVING COUNT(*) > 1
+ORDER BY situsfullstreetaddress ASC NULLS LAST
+
+
+select situsfullstreetaddress, 
+       COUNT(1) as ClusterID, (select COUNT(*) from "20211111_update") as TotalCount
+from "20211111_update"
+WHERE situsfullstreetaddress IN (select CONCAT(situshousenbr, ' ',situshousenbrsuffix, '',situsstreet,' ',situsmode) from "20211111_update")
+GROUP BY cube(situsfullstreetaddress)
+order by situsfullstreetaddress ASC NULLS LAST
+
+select COUNT(*) from "20211111_deedmtg", "20211115_deedmtg" 
+select COUNT(*) from "20211111_deedmtg"
+
+
+select mailinghousenbr,mailingstreet from "20211111_update"
+
+select fips from "20211115_deedmtg" 
+
+union all
+
+select fips from "20211112_deedmtg" 
