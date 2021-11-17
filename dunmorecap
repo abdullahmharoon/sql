@@ -32,14 +32,16 @@ WHERE situsfullstreetaddress IN (select CONCAT(situshousenbr, ' ',situshousenbrs
 GROUP BY cube(situsfullstreetaddress)
 order by situsfullstreetaddress ASC NULLS LAST
 
-select COUNT(*) from "20211111_deedmtg", "20211115_deedmtg" 
-select COUNT(*) from "20211111_deedmtg"
+-------------
+WITH mi6 AS
+(
+select CONCAT(mailinghousenbr,' ',mailingdirectionleft,' ',mailingstreet,' ',mailingmode,' ',mailingunittype,' ',mailingunitnbr,' ',mailingcity,' ',mailingstate,' ',cast(mailingzip5 as varchar(5)),'-',cast(mailingzip4 as varchar(5)),' ', cast(mailingcarriercode as varchar(10)),' ',cast(mailingcountyfipscode as varchar(10))) as MailingAddress, COUNT(*) as TotalCount,"buyerborrower1name"      
+from "mi6_consolidated"
+GROUP BY mailinghousenbr,mailingdirectionleft,mailingstreet,mailingmode,mailingunittype,mailingunitnbr,mailingcity,mailingstate,mailingzip5,mailingzip4,mailingcarriercode,mailingcountyfipscode,buyerborrower1name
+LIMIT 10
+)
 
-
-select mailinghousenbr,mailingstreet from "20211111_update"
-
-select fips from "20211115_deedmtg" 
-
-union all
-
-select fips from "20211112_deedmtg" 
+select MailingAddress,ROW_NUMBER() OVER(ORDER BY MailingAddress) as OriginalClusterID,  GROUPING(buyerborrower1name) as ClusterGroup, SUM(TotalCount) as TotalCount
+FROM mi6
+GROUP BY GROUPING SETS(MailingAddress,buyerborrower1name)
+LIMIT 10
