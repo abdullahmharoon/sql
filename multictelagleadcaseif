@@ -1,0 +1,26 @@
+WITH CTE AS (
+
+select "concatenatedmailingaddress", ROWNUM
+from "mi6_concatenatemailingaddress_indexed" 
+LIMIT 100000
+),
+
+CTS AS
+(
+Select "concatenatedmailingaddress", ROWNUM,
+        LAG("ROWNUM",1,1) OVER() PreviousROW,
+        LEAD("ROWNUM") OVER() as NextROW,
+       LAG("concatenatedmailingaddress",1,"concatenatedmailingaddress") OVER( ) as PreviousMailingAddress,
+       LEAD("concatenatedmailingaddress") OVER() as NextMailingAddress
+from CTE
+)
+
+select "concatenatedmailingaddress", ROWNUM,PreviousROW,NextROW,PreviousMailingAddress,NextMailingAddress,
+    CASE WHEN concatenatedmailingaddress = PreviousMailingAddress THEN PreviousROW  
+    WHEN concatenatedmailingaddress != PreviousMailingAddress  THEN ROWNUM
+    ELSE ROWNUM  END as ComparedIndex,
+    IF (concatenatedmailingaddress = PreviousMailingAddress,PreviousROW, ROWNUM), 
+    IF (concatenatedmailingaddress = LAG(PreviousMailingAddress) OVER(), RANK() OVER(PARTITION BY concatenatedmailingaddress) ),
+    RANK()OVER(ORDER BY concatenatedmailingaddress ASC)
+FROM CTS
+ORDER BY ROWNUM ASC
