@@ -1,0 +1,15 @@
+select "concatenatedmailingaddress", ROWNUM,PreviousROW,NextROW,PreviousMailingAddress,NextMailingAddress,
+    CASE 
+        WHEN concatenatedmailingaddress = PreviousMailingAddress THEN PreviousROW  
+        WHEN concatenatedmailingaddress != PreviousMailingAddress  THEN ROWNUM 
+        WHEN concatenatedmailingaddress = LAG(PreviousMailingAddress) OVER() THEN
+        CASE WHEN concatenatedmailingaddress = LAG(PreviousMailingAddress) OVER() THEN
+            CASE WHEN concatenatedmailingaddress = LAG(PreviousMailingAddress) OVER() THEN 
+                CASE WHEN concatenatedmailingaddress = LAG(PreviousMailingAddress) OVER() THEN LAG(PreviousROW) OVER()
+                     WHEN concatenatedmailingaddress = LAG(PreviousMailingAddress) OVER() THEN LAG(PreviousROW) OVER() ELSE LAG(PreviousROW) OVER() END
+                     ELSE LAG(PreviousROW) OVER() END
+             ELSE LAG(PreviousROW) OVER() END
+    ELSE LAG(ROWNUM) OVER() END as ComparedIndex
+
+FROM CTS
+ORDER BY ROWNUM ASC
