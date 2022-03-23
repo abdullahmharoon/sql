@@ -1,0 +1,88 @@
+------------------------------------------------------STATE_YEAR_TRANSACTION---------------------------------------------------------------------------------------------------
+WITH CTE AS
+(
+select a.situsstate,date_part_year(a.recordingdate) as Year,count(a.*) as total_records,count(DISTINCT a.buyerborrower1name) as Unique_BBN,b.unique_bbn_fixflip as Unique_bbn_Fix_Flip,c.Unique_BBN_Rental,
+d.Number_Records_Fix_Flip,e.Number_Records_Rental,f.saleamt as SaleAmt_Fix_Flip,g.saleamt as SaleAmt_Rental,h.Unique_bbn_LenderName_Blank,i.Unique_bbn_LenderName_Blank_FixFlip,j.Unique_bbn_LenderName_Blank_Rental
+FROM mi6_consolidated_refresh_arms_type  a
+LEFT JOIN (
+      select situsstate,date_part_year(recordingdate) as Year,count(DISTINCT buyerborrower1name) as unique_bbn_fixflip                             
+      FROM mi6_consolidated_refresh_arms_type
+      WHERE days_to_next_transaction_segmentation = 'Fix & Flip' 
+      GROUP BY situsstate,Year
+	) b on b.situsstate=a.situsstate and b.Year=date_part_year(a.recordingdate)
+LEFT JOIN (
+      select situsstate,date_part_year(recordingdate) as Year,count(DISTINCT buyerborrower1name) as Unique_BBN_Rental                               
+      FROM mi6_consolidated_refresh_arms_type
+      WHERE days_to_next_transaction_segmentation  = 'Rental' 
+      GROUP BY situsstate,Year
+	) c on c.situsstate=a.situsstate and c.Year=date_part_year(a.recordingdate)
+LEFT JOIN (
+      select situsstate,date_part_year(recordingdate) as Year,count(*) as Number_Records_Fix_Flip                               
+      FROM mi6_consolidated_refresh_arms_type
+      WHERE days_to_next_transaction_segmentation = 'Fix & Flip' 
+      GROUP BY situsstate,Year
+	) d on d.situsstate=a.situsstate and d.Year=date_part_year(a.recordingdate)
+LEFT JOIN (
+      select situsstate,date_part_year(recordingdate) as Year,count(*) as Number_Records_Rental                               
+      FROM mi6_consolidated_refresh_arms_type   
+      WHERE days_to_next_transaction_segmentation = 'Rental' 
+      GROUP BY situsstate,Year
+	) e on e.situsstate=a.situsstate and e.Year=date_part_year(a.recordingdate)
+LEFT JOIN (WITH CTE AS 
+           (select situsstate,date_part_year(recordingdate) as Year,case when saleamt ~ '^[0-9]+$' then saleamt else NULL end as saleamt 
+  			from mi6_consolidated_refresh_arms_type   WHERE days_to_next_transaction_segmentation = 'Fix & Flip' 
+           )
+           select situsstate,Year,SUM(cast(cast(saleamt as bigint) as bigint)) as saleamt from cte GROUP BY situsstate,year  			
+          ) f ON f.situsstate=a.situsstate and f.Year=date_part_year(a.recordingdate) 
+LEFT JOIN (WITH CTE AS 
+           (select situsstate,date_part_year(recordingdate) as Year,case when saleamt ~ '^[0-9]+$' then saleamt else NULL end as saleamt 
+  			from mi6_consolidated_refresh_arms_type   WHERE days_to_next_transaction_segmentation= 'Rental' 
+       	   )
+           select situsstate,Year,SUM(cast(cast(saleamt as bigint) as bigint)) as saleamt from cte GROUP BY situsstate,year
+          ) g ON g.situsstate=a.situsstate and g.Year=date_part_year(a.recordingdate)   
+LEFT JOIN (
+			select situsstate,date_part_year(recordingdate) as Year, count(DISTINCT buyerborrower1name) as Unique_bbn_LenderName_Blank
+			FROM mi6_consolidated_refresh_arms_type   
+			WHERE  newfirstmtglendername != ' ' 
+			GROUP BY situsstate,Year
+		) h ON h.situsstate=a.situsstate and h.Year=date_part_year(a.recordingdate)
+LEFT JOIN (
+  			select situsstate,date_part_year(recordingdate) as Year, count(DISTINCT buyerborrower1name) as Unique_bbn_LenderName_Blank_FixFlip
+			FROM mi6_consolidated_refresh_arms_type  
+			WHERE  newfirstmtglendername != ' ' and days_to_next_transaction_segmentation = 'Fix & Flip' 
+			GROUP BY situsstate,Year
+  		) i ON i.situsstate=a.situsstate and i.Year=date_part_year(a.recordingdate)
+LEFT JOIN (
+			select situsstate,date_part_year(recordingdate) as Year, count(DISTINCT buyerborrower1name) as Unique_bbn_LenderName_Blank_Rental
+			FROM mi6_consolidated_refresh_arms_type  
+			WHERE  newfirstmtglendername != ' ' and days_to_next_transaction_segmentation = 'Rental' 
+			GROUP BY situsstate,Year
+		)  j ON j.situsstate=a.situsstate and j.Year=date_part_year(a.recordingdate)
+WHERE days_to_next_transaction_include_flag='Include Transaction' 
+GROUP BY a.situsstate,date_part_year(a.recordingdate),b.unique_bbn_fixflip,c.Unique_BBN_Rental,d.Number_Records_Fix_Flip,e.Number_Records_Rental,f.saleamt,g.saleamt,h.Unique_bbn_LenderName_Blank,
+  			i.Unique_bbn_LenderName_Blank_FixFlip,j.Unique_bbn_LenderName_Blank_Rental
+)
+SELECT * FROM CTE
+
+UNION ALL
+Select NULL,NULL,SUM(total_records),SUM(unique_BBN),SUM(unique_bbn_fix_flip),SUM(unique_bbn_rental),SUM(number_records_fix_flip),SUM(number_records_rental),SUM(SaleAmt_Fix_Flip),SUM(SaleAmt_Rental),SUM(Unique_bbn_LenderName_Blank),
+		SUM(Unique_bbn_LenderName_Blank_FixFlip),SUM(Unique_bbn_LenderName_Blank_Rental)
+FROM CTE
+-------------------------------------------Primary Market----------------------------------------------------------------------------
+select a.situsstate,  date_part_year(recordingdate) as year,b.saleamt as SaleAmt_Fix_Flip,c.saleamt as SaleAmt_Rental,count(distinct clusterid_3_bbn) unique_cluster_count,count(distinct newfirstmtglendername) as Unique_Lender_Names,count(distinct buyerborrower1name) as Unique_Buyer_Borrowers,count(distinct csa) as Unique_Properties 
+from mi6_consolidated_refresh_arms_type a
+left join (WITH CTE AS 
+           (select situsstate,date_part_year(recordingdate) as Year,case when saleamt ~ '^[0-9]+$' then saleamt else NULL end as saleamt 
+  			from mi6_consolidated_refresh_arms_type   WHERE days_to_next_transaction_segmentation = 'Fix & Flip' 
+           )
+           select situsstate,Year,SUM(cast(cast(saleamt as bigint) as bigint)) as saleamt from cte GROUP BY situsstate,year  			
+          ) b ON b.situsstate=a.situsstate and b.Year=date_part_year(a.recordingdate)
+LEFT JOIN (WITH CTE AS 
+           (select situsstate,date_part_year(recordingdate) as Year,case when saleamt ~ '^[0-9]+$' then saleamt else NULL end as saleamt 
+  			from mi6_consolidated_refresh_arms_type   WHERE days_to_next_transaction_segmentation= 'Rental' 
+       	   )
+           select situsstate,Year,SUM(cast(cast(saleamt as bigint) as bigint)) as saleamt from cte GROUP BY situsstate,year
+          ) c ON c.situsstate=a.situsstate and c.Year=date_part_year(a.recordingdate)           
+where a.situsstate in ('CA','FL','TX','OH','IL','MI','GA','PA','NC','AZ','NY','WA','CO','VA','NJ') and a.saleamt !=' ' and date_part_year(a.recordingdate)  BETWEEN '2018' and '2021'
+group by a.situsstate,date_part_year(a.recordingdate),b.saleamt,c.saleamt 
+order by unique_cluster_count desc           
