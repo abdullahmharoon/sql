@@ -1,5 +1,0 @@
-{ INCLUDE [Demos]:
-IF MIN([Demos])="Persons 18+"
-THEN SUM([!Tracked Ads])
-END
-}
