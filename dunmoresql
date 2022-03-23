@@ -1,0 +1,190 @@
+--------------------------------Remove Update rows from Propertyid---------------------------------
+create table mi6_consolidated_withlastesttimestamp AS WITH CTE as  
+(
+select *, ROW_NUMBER() over (partition by fatransactionid order by cast(fatimestamp as date) desc ) as rn
+  from egf.public.mi6_consolidated 
+)
+select * from cte where rn = 1
+
+select COUNT(*)
+from (select fatransactionid, fatimestamp, fips from egf.public.mi6_consolidated t1
+      WHERE fatimestamp = (
+   		SELECT max(fatimestamp)
+   		FROM egf.public.mi6_consolidated T2
+  		WHERE T1.fatransactionid=T2.fatransactionid
+        					)
+      group by fatransactionid,fatimestamp,fips
+     )
+
+------------------CMA_CSA CONCAT-----------------------------------------------------------------------
+CREATE TABLE mi6_consolidated_refresh_cma_csa AS
+(
+select fips, propertyid, apn, apnseqnbr, oldapn, taxaccountnumber, matchedflag, situshousenbr, situshousenbrsuffix, situsdirectionleft, situsstreet, situsmode, situsdirectionright, situsunittype, situsunitnbr, situscity, situsstate, situszip5, situszip4, situscarriercode, buyerborrower1corpind, buyerborrower1name, buyerborrower1etalind, buyerborrower1careofname, buyerborrower1ownershiprightscode, buyerborrower1relationshiptype, buyerborrower2corpind, buyerborrower2name, buyerborrower2ownershiprightscode, buyerborrower2relationshiptype, buyerborrower1lastname, buyerborrower1firstname, buyerborrower1middleinitial, buyerborrower1namesuffix, buyerborrower2lastname, buyerborrower2firstname, buyerborrower2middleinitial, buyerborrower2namesuffix, mailinghousenbr, mailinghousenbrsuffix, mailingdirectionleft, mailingstreet, mailingmode, mailingdirectionright, mailingunittype, mailingunitnbr, mailingcity, mailingstate, mailingzip5, mailingzip4, mailingcarriercode, mailingcountyfipscode, mailingforeignaddressind, fatransactionid, recordingdate, saledate, documentnbr, recordingbook, recordingpage, hawaiilandcourtdocumentnbr, hawaiicertificatenbr, waexicenbr, documenttype, transactiontype, seller1name, seller1corpind, seller2name, seller2corpind, saleamt, salespricecode, transfertax, partialinterestflag, resaleflag, newconstructionflag, interfamilyflag, foreclosureflag, reosaleflag, firstmtgrecordingdate, firstmtgdocumentdate, firstmtgdocumentnbr, firstmtgbook, firstmtgpage, firstmtgdocumenttype, firstmtgamt, firstmtglendername, firstmtgloantranstype, firstmtgloantype, firstmtgtermcode, firstmtgterm, firstmtgduedate, firstmtginterestratetype, firstmtginterestrate, firstmtgestimatedinterestrateind, firstmtgsellercarrybackflag, firstmtgprivatepartylender, firstmtgconstructionloan, firstmtgrefiflag, firstmtgequityflag, firstmtghelocflag, firstmtgothersubordinateloanflag, firstmtgsecondhomerider, firstmtgcondominiumrider, firstmtgmultifamily4rider, firstmtgplannedunitdevelopmentrider, firstmtgassumabilityrider, firstmtgballoonrider, firstmtgbiweeklypaymentrider, firstmtgfixedstepraterider, firstmtggraduatedpaymentrider, firstmtgprepaymentrider, firstmtgrateimprovementrider, firstmtgadjustableraterider, firstmtgadjustablerateindex, firstmtgchangeindex, firstmtgfirstchangedatemonthday, firstmtgfirstchangedateyear, firstmtginterestonlyperiod, firstmtgmaximuminterestrate, firstmtgminimuminterestrate, firstmtgratechangefrequency, secondmtgrecordingdate,secondmtgdocumentdate, secondmtgdocumentnbr, secondmtgbook, secondmtgpage, secondmtgdocumenttype, secondmtgamt, secondmtglendername, secondmtgloantranstype, secondmtgloantype, secondmtgtermcode, secondmtgterm, secondmtgduedate, secondmtginterestratetype, secondmtginterestrate, secondmtgestimatedinterestrateind, secondmtgsellercarrybackflag, secondmtgprivatepartylender, secondmtgconstructionloan, secondmtgrefiflag, secondmtgequityflag, secondmtghelocflag, secondmtgothersubordinateloanflag, secondmtgsecondhomerider, secondmtgcondominiumrider, secondmtgmultifamily4rider, secondmtgplannedunitdevelopmentrider, secondmtgassumabilityrider, secondmtgballoonrider, secondmtgbiweeklypaymentrider, secondmtgfixedstepraterider, secondmtggraduatedpaymentrider, secondmtgprepaymentrider, secondmtgrateimprovementrider, secondmtgadjustableraterider, secondmtgadjustablerateindex, secondmtgchangeindex, secondmtgfirstchangedatemonthday, secondmtgfirstchangedateyear, secondmtginterestonlyperiod, secondmtgmaximuminterestrate, secondmtgminimuminterestrate, secondmtgratechangefrequency, lotcode, lotnbr, landlot, block, section, district, legalunit, municipality, subdivisionname, subdivisionphasenbr, subdivisiontractnbr, meridian, assessorsmapref, legaldescription, titlecompanyname, multiapn, fatimestamp, farecordtype,
+  CONCAT(concat(coalesce(mailinghousenbr,''),' '),concat(concat(coalesce(mailingdirectionleft,' '),' '),concat(concat(coalesce(mailingstreet, ' '),' '),
+                                                                                                                   concat(concat(coalesce(mailingmode,' '),' '),
+                                                                                                                          concat(concat(coalesce(mailingunittype,' '),' '), concat(concat(coalesce(mailingunitnbr,''),' '),concat(concat(coalesce(mailingcity,''),' '),                                                                                                                                             concat(concat(coalesce(mailingstate,' '),' '),                                                                                                                                                      coalesce(cast(mailingzip5 as varchar(10)),' '))))))))) as CMA,
+CONCAT(concat(coalesce(situshousenbr,''),' '),concat(concat(coalesce(situsdirectionleft,' '),' '),concat(concat(coalesce(situsstreet, ' '),' '),
+                                                                                                                   concat(concat(coalesce(situsmode,' '),' '),
+                                                                                                                          concat(concat(coalesce(situsunittype,' '),' '),concat(concat(coalesce(situsunitnbr,''),' '),concat(concat(coalesce(situscity ,''),' '),concat(concat(coalesce(situsstate ,' '),' '), coalesce(cast(situszip5  as varchar(10)),' ')))))))))as CSA                                                                         
+                                                                                                                                                      
+FROM egf.public.mi6_consolidated_refresh
+)
+
+--------------------------------cma_sort-----------------------------------------------------------------------
+CREATE TABLE mi6_consolidated_refresh_cmasort as 
+(
+SELECT *
+FROM egf.public.mi6_consolidated_refresh_cma_csa
+ORDER BY CMA NULLS FIRST
+)
+select top 10000 * from mi6_consolidated_refresh_cmasort ORDER BY CMA NULLS FIRST
+----------------------------------clusterid_0_cma------------------------------------------------------------------------------------
+CREATE TABLE mi6_consolidated_refresh_clusterid_0_cma as 
+(
+SELECT  *, ROW_NUMBER() OVER(PARTITION BY 1 ORDER BY CMA NULLS FIRST ) as clusterid_0_cma
+FROM egf.public.mi6_consolidated_refresh_cmasort
+ORDER BY CMA NULLS FIRST
+)
+----------------------------------clusterid_1_bbn_sort------------------------------------------------------------------------------------
+CREATE TABLE mi6_consolidated_refresh_clusterid_1_bbn_sort as 
+(
+SELECT  *
+FROM mi6_consolidated_refresh_clusterid_0_cma
+ORDER BY collate(buyerborrower1name,'case_insensitive')
+)
+---------------------------------clusterid_1_bbn-------------------------------------------------------------------------------------                                        
+CREATE TABLE egf.public.mi6_consolidated_refresh_clusterid_1_bbn AS 
+(
+SELECT *, 
+ CASE WHEN collate(buyerborrower1name,'case_insensitive') = lag(collate(buyerborrower1name,'case_insensitive'))OVER(PARTITION BY collate(buyerborrower1name,'case_insensitive')
+                                                                                                               ORDER BY collate(buyerborrower1name,'case_insensitive'),clusterid_0_cma) 
+    			and collate(buyerborrower1name,'case_insensitive') NOT IN (' ','UNKNOWN','P','A','SMITH') 
+         THEN first_value(clusterid_0_cma) OVER(PARTITION BY collate(buyerborrower1name,'case_insensitive') order by clusterid_0_cma rows between unbounded preceding and unbounded following)
+    ELSE clusterid_0_cma
+    END as clusterid_1_bbn
+FROM mi6_consolidated_refresh_clusterid_1_bbn_sort
+)
+                                                              
+------------------------------clusterid_2_cma_sort--------------------------------------------------------------------------------------                                                                
+CREATE TABLE egf.public.mi6_consolidated_refresh_clusterid_2_cma_sort AS 
+(
+SELECT *
+FROM egf.public.mi6_consolidated_refresh_clusterid_1_bbn
+ORDER BY collate(cma,'case_insensitive')
+)
+
+------------------------------clusterid_2_cma-----------------------------------------------------------------                                                                
+CREATE TABLE egf.public.mi6_consolidated_refresh_clusterid_2_cma AS 
+(
+select *, 
+CASE WHEN collate(cma,'case_insensitive') = lag(collate(cma,'case_insensitive'))OVER(PARTITION BY collate(cma,'case_insensitive') ORDER BY collate(cma,'case_insensitive'),clusterid_1_bbn) 
+  		and collate(cma,'case_insensitive') 
+  				NOT IN (' ','       GA ','       TN ','       NY ','       AL ','       SC ','       XX ','  DR      ','       OH ','       NC ','       MO ','       TX ','       WI ','  RR      ','       OK ','      DALLAS TX 75254',
+              			'      SINGAPORE REPUBLIC OF SINGAPOR','      BOCA RATON FL 33431','      NASON IL ','      NOT AVAILABLE IL ',
+                      	'      DALLAS TX 75265','      OKLAHOMA CITY OK 73107','      AUSTIN TX 78746','      WEST PALM BEACH FL 33409','  PO BOX    COLUMBUS OH 43219','  PO BOX 1000    MISSION TX 78573','      CHICAGO IL 60606',
+                        '      SCOTTSDALE AZ 85251','      TORONTO ONTARIO  ','      DALLAS TX 75240','      MOORHEAD MN 56560','      SCOTTSDALE AZ 85258','      SCOTTSDALE AZ 85255','  MINERAL CARD     OH ','  `    BARBOURVILLE KY 40906',
+						'      ALLEN TX 75013','      TROY MI 48084','      ATLANTA GA 30305','      PLANO TX 75024','      ANAHEIM CA 92806','      TUPELO MS 38801','      CHICAGO IL 60647','      1001 QUEEN',  '      CHICKASHA OK 73018',
+              			'      CHICAGO IL 60601','      AGOURA HILLS CA 91301','      HOUSTON TX 77042','      TUPELO MS 38804','      PITTSBURGH PA 15276','      DALLAS TX 75201','      988 HALEKAUWILA',  '      CORINTH MS 38834',
+              			'      AMORY MS 38821','      NORTH MYRTLE BEACH SC 29582','      SALTILLO MS 38866','      GRENADA MS 38901','      IRVINE CA 92618','      MARIETTA GA 30067','      NEWPORT BEACH CA 92660',
+              			'      OWENSVILLE MO 65066','      NASHVILLE TN 37203','      AUSTIN TX 78759','      BYHALIA MS 38611','      SAN DIEGO CA 92127','      LUTHERVILLE MD 21093','      DETROIT MI 48226','      BEAVERTON OR 97005',
+              			'      HOUSTON TX 77002','      383 KALAIMOKU','      LOS ANGELES CA 90025','      NOT PROVIDED IL', '      ABERDEEN MS 39730','      CHICAGO IL 60614')
+         THEN first_value(clusterid_1_bbn) OVER(PARTITION BY collate(cma,'case_insensitive') order by clusterid_1_bbn rows between unbounded preceding and unbounded following)
+    ELSE clusterid_1_bbn
+    END as clusterid_2_cma
+FROM egf.public.mi6_consolidated_refresh_clusterid_2_cma_sort
+)
+------------------------------clusterid_3_bbn_sort---------------------------------------------------------                                         
+CREATE TABLE egf.public.mi6_consolidated_refresh_clusterid_3_bbn_sort AS
+(
+select * 
+FROM egf.public.mi6_consolidated_refresh_clusterid_2_cma
+ORDER BY collate(buyerborrower1name,'case_insensitive')
+)
+
+------------------------------clusterid_3_bbn----------------------------------------------------------------
+CREATE TABLE egf.public.mi6_consolidated_refresh_clusterid_3_bbn AS 
+(                                                
+select *, 
+ CASE WHEN  collate(buyerborrower1name,'case_insensitive') = lag(collate(buyerborrower1name,'case_insensitive')) OVER(PARTITION BY collate(buyerborrower1name,'case_insensitive') ORDER BY 	
+                                                                                                                 collate(buyerborrower1name,'case_insensitive'),clusterid_2_cma)
+  		AND collate(buyerborrower1name,'case_insensitive') NOT IN (' ','UNKNOWN','P','A','SMITH') 
+        THEN first_value(clusterid_2_cma) OVER(PARTITION BY collate(buyerborrower1name,'case_insensitive') order by clusterid_2_cma rows between unbounded preceding and unbounded following  )
+    ELSE clusterid_2_cma
+    END as clusterid_3_bbn
+FROM egf.public.mi6_consolidated_refresh_clusterid_3_bbn_sort
+)  
+                                                                 
+select count(*) from egf.public.mi6_consolidated_refresh_clusterid_3_bbn
+---------------------------------------newfirstmtglendername----------------------------------------------------------------------
+CREATE TABLE mi6_consolidated_refresh_newfirstmtglendername AS 
+(
+select fips, propertyid, apn, apnseqnbr, oldapn, taxaccountnumber, matchedflag, situshousenbr, situshousenbrsuffix, situsdirectionleft, situsstreet, situsmode, situsdirectionright, situsunittype, situsunitnbr, situscity, situsstate, situszip5, situszip4, situscarriercode, buyerborrower1corpind,buyerborrower1etalind, buyerborrower1careofname, buyerborrower1ownershiprightscode, buyerborrower1relationshiptype, buyerborrower2corpind, buyerborrower2name, buyerborrower2ownershiprightscode, buyerborrower2relationshiptype, buyerborrower1lastname, buyerborrower1firstname, buyerborrower1middleinitial, buyerborrower1namesuffix, buyerborrower2lastname, buyerborrower2firstname, buyerborrower2middleinitial, buyerborrower2namesuffix, mailinghousenbr, mailinghousenbrsuffix, mailingdirectionleft, mailingstreet, mailingmode, mailingdirectionright, mailingunittype, mailingunitnbr, mailingcity, mailingstate, mailingzip5, mailingzip4, mailingcarriercode, mailingcountyfipscode, mailingforeignaddressind, fatransactionid,  saledate, documentnbr, recordingbook, recordingpage, hawaiilandcourtdocumentnbr, hawaiicertificatenbr, waexicenbr, documenttype, transactiontype, seller1name, seller1corpind, seller2name, seller2corpind, saleamt, salespricecode, transfertax, partialinterestflag, resaleflag, newconstructionflag, interfamilyflag, foreclosureflag, reosaleflag, firstmtgrecordingdate, firstmtgdocumentdate, firstmtgdocumentnbr, firstmtgbook, firstmtgpage, firstmtgdocumenttype, firstmtgamt, firstmtglendername, firstmtgloantranstype, firstmtgloantype, firstmtgtermcode, firstmtgterm, firstmtgduedate, firstmtginterestratetype, firstmtginterestrate, firstmtgestimatedinterestrateind, firstmtgsellercarrybackflag, firstmtgprivatepartylender, firstmtgconstructionloan, firstmtgrefiflag, firstmtgequityflag, firstmtghelocflag, firstmtgothersubordinateloanflag, firstmtgsecondhomerider, firstmtgcondominiumrider, firstmtgmultifamily4rider, firstmtgplannedunitdevelopmentrider, firstmtgassumabilityrider, firstmtgballoonrider, firstmtgbiweeklypaymentrider, firstmtgfixedstepraterider, firstmtggraduatedpaymentrider, firstmtgprepaymentrider, firstmtgrateimprovementrider, firstmtgadjustableraterider, firstmtgadjustablerateindex, firstmtgchangeindex, firstmtgfirstchangedatemonthday, firstmtgfirstchangedateyear, firstmtginterestonlyperiod, firstmtgmaximuminterestrate, firstmtgminimuminterestrate, firstmtgratechangefrequency, secondmtgrecordingdate, secondmtgdocumentdate, secondmtgdocumentnbr, secondmtgbook, secondmtgpage, secondmtgdocumenttype, secondmtgamt, secondmtglendername, secondmtgloantranstype, secondmtgloantype, secondmtgtermcode, secondmtgterm, secondmtgduedate, secondmtginterestratetype, secondmtginterestrate, secondmtgestimatedinterestrateind, secondmtgsellercarrybackflag, secondmtgprivatepartylender, secondmtgconstructionloan, secondmtgrefiflag, secondmtgequityflag, secondmtghelocflag, secondmtgothersubordinateloanflag, secondmtgsecondhomerider, secondmtgcondominiumrider, secondmtgmultifamily4rider, secondmtgplannedunitdevelopmentrider, secondmtgassumabilityrider, secondmtgballoonrider, secondmtgbiweeklypaymentrider, secondmtgfixedstepraterider, secondmtggraduatedpaymentrider, secondmtgprepaymentrider, secondmtgrateimprovementrider, secondmtgadjustableraterider, secondmtgadjustablerateindex, secondmtgchangeindex, secondmtgfirstchangedatemonthday, secondmtgfirstchangedateyear, secondmtginterestonlyperiod, secondmtgmaximuminterestrate, secondmtgminimuminterestrate, secondmtgratechangefrequency, lotcode, lotnbr, landlot, block, section, district, legalunit, municipality, subdivisionname, subdivisionphasenbr, subdivisiontractnbr, meridian, assessorsmapref, legaldescription, titlecompanyname, multiapn, fatimestamp, farecordtype,cast(recordingdate as date), CMA,csa,buyerborrower1name, ClusterID_0_CMA, clusterid_1_bbn, clusterid_2_cma, clusterid_3_bbn, 
+  CASE 
+    WHEN a.firstmtglendername = b.entityname THEN b.firstmtglendername_new 
+    ELSE a.firstmtglendername 
+    END as NewFirstlendername 
+FROM egf.public.mi6_consolidated_refresh_clusterid_3_bbn a 
+LEFT JOIN lendername_cleanup b ON b.entityname = a.firstmtglendername
+)
+-------------------------------------------------------MATCHING_LENDER_NAME_CLEANUP----------------------------------------------------------------------
+WITH mi6_matching_newfirstmtglendername AS (
+select apn, apnseqnbr, oldapn, taxaccountnumber, matchedflag, situshousenbr, situshousenbrsuffix, situsdirectionleft, situsstreet, situsmode, situsdirectionright, situsunittype, situsunitnbr, situscity, situsstate,
+situszip5, situszip4, situscarriercode, buyerborrower1corpind, buyerborrower1name, buyerborrower1etalind, buyerborrower1careofname, buyerborrower1ownershiprightscode, buyerborrower1relationshiptype, buyerborrower2corpind, buyerborrower2name, 
+buyerborrower2ownershiprightscode, buyerborrower2relationshiptype, buyerborrower1lastname, buyerborrower1firstname, buyerborrower1middleinitial, buyerborrower1namesuffix, buyerborrower2lastname, buyerborrower2firstname, buyerborrower2middleinitial, 
+buyerborrower2namesuffix, mailinghousenbr, mailinghousenbrsuffix, mailingdirectionleft, mailingstreet, mailingmode, mailingdirectionright, mailingunittype, mailingunitnbr,mailingcity, mailingstate, mailingzip5, mailingzip4, mailingcarriercode, 
+mailingcountyfipscode, mailingforeignaddressind, documentnbr, recordingbook, recordingpage, hawaiilandcourtdocumentnbr, hawaiicertificatenbr, waexicenbr, documenttype, transactiontype, seller1name, seller1corpind, seller2name, seller2corpind, 
+saleamt, salespricecode, transfertax, partialinterestflag, resaleflag,newconstructionflag, interfamilyflag, foreclosureflag, reosaleflag, firstmtgrecordingdate, firstmtgdocumentdate, firstmtgdocumentnbr, firstmtgbook, firstmtgpage, 
+firstmtgdocumenttype,  firstmtglendername, firstmtgloantranstype, firstmtgloantype, firstmtgtermcode, firstmtgterm, firstmtgduedate, firstmtginterestratetype, firstmtginterestrate, firstmtgestimatedinterestrateind, 
+firstmtgsellercarrybackflag, firstmtgprivatepartylender, firstmtgconstructionloan, firstmtgrefiflag, firstmtgequityflag, firstmtghelocflag, firstmtgothersubordinateloanflag, firstmtgsecondhomerider, firstmtgcondominiumrider, 
+firstmtgmultifamily4rider, firstmtgplannedunitdevelopmentrider, firstmtgassumabilityrider, firstmtgballoonrider, firstmtgbiweeklypaymentrider, firstmtgfixedstepraterider, firstmtggraduatedpaymentrider, firstmtgprepaymentrider, 
+firstmtgrateimprovementrider, firstmtgadjustableraterider, firstmtgadjustablerateindex, firstmtgchangeindex, firstmtgfirstchangedatemonthday, firstmtgfirstchangedateyear, firstmtginterestonlyperiod, firstmtgmaximuminterestrate, 
+firstmtgminimuminterestrate, firstmtgratechangefrequency, secondmtgrecordingdate, secondmtgdocumentdate, secondmtgdocumentnbr, secondmtgbook, secondmtgpage, secondmtgdocumenttype, secondmtgamt, secondmtglendername, secondmtgloantranstype, 
+secondmtgloantype, secondmtgtermcode, secondmtgterm, secondmtgduedate, secondmtginterestratetype, secondmtginterestrate, secondmtgestimatedinterestrateind, secondmtgsellercarrybackflag, secondmtgprivatepartylender, secondmtgconstructionloan, 
+secondmtgrefiflag, secondmtgequityflag, secondmtghelocflag, secondmtgothersubordinateloanflag, secondmtgsecondhomerider, secondmtgcondominiumrider, secondmtgmultifamily4rider, secondmtgplannedunitdevelopmentrider, secondmtgassumabilityrider, 
+secondmtgballoonrider, secondmtgbiweeklypaymentrider, secondmtgfixedstepraterider, secondmtggraduatedpaymentrider, secondmtgprepaymentrider, secondmtgrateimprovementrider, secondmtgadjustableraterider, secondmtgadjustablerateindex, 
+secondmtgchangeindex, secondmtgfirstchangedatemonthday, secondmtgfirstchangedateyear, secondmtginterestonlyperiod, secondmtgmaximuminterestrate, secondmtgminimuminterestrate, secondmtgratechangefrequency, lotcode, lotnbr, landlot, block, section, 
+district, legalunit, municipality, subdivisionname, subdivisionphasenbr, subdivisiontractnbr, meridian, assessorsmapref, legaldescription, titlecompanyname, multiapn,fips, propertyid,fatimestamp, farecordtype,fips,propertyid, fatransactionid, 
+cast(recordingdate as varchar(50)), saledate, CMA,csa,buyerborrower1name, ClusterID_0_CMA, clusterid_1_bbn, clusterid_2_cma, clusterid_3_bbn, cast(nextrecordingdate as VARCHAR(50)),days_to_next_transaction,days_to_next_transaction_segmentation,
+CASE WHEN a.firstmtglendername = b.entityname THEN b.firstmtglendername_new ELSE a.firstmtglendername END as NewFirstmtglendername, firstmtgamt
+FROM egf.public.mi6_consolidated_refresh_arms_type a
+LEFT JOIN lendername_cleanup b ON b.entityname = a.firstmtglendername
+where b.entityname=a.firstmtglendername 
+)select  *,count(*) OVER(PARTITION BY clusterid_3_bbn,newfirstmtglendername,firstmtgamt,recordingdate) as ASSET_COUNT  from mi6_matching_newfirstmtglendername
+
+                                
+--------------------------------------------DAYS_TO_NEXT_TRANSACTION_SEGMENTATION-------------------------------------                                         
+CREATE TABLE mi6_consolidated_refresh_days_to_next_transaction_segmentation AS WITH mi6_consolidated_refresh_days_to_next_transaction_segmentation AS 
+(
+select apn, apnseqnbr, oldapn, taxaccountnumber, matchedflag, situshousenbr, situshousenbrsuffix, situsdirectionleft, situsstreet, situsmode, situsdirectionright, situsunittype, situsunitnbr, situscity, situsstate,
+situszip5, situszip4, situscarriercode, buyerborrower1corpind, buyerborrower1name, buyerborrower1etalind, buyerborrower1careofname, buyerborrower1ownershiprightscode, buyerborrower1relationshiptype, buyerborrower2corpind, buyerborrower2name, buyerborrower2ownershiprightscode, buyerborrower2relationshiptype, buyerborrower1lastname, buyerborrower1firstname, buyerborrower1middleinitial, buyerborrower1namesuffix, buyerborrower2lastname, buyerborrower2firstname, buyerborrower2middleinitial, buyerborrower2namesuffix, mailinghousenbr, mailinghousenbrsuffix, mailingdirectionleft, mailingstreet, mailingmode, mailingdirectionright, mailingunittype, mailingunitnbr,mailingcity, mailingstate, mailingzip5, mailingzip4, mailingcarriercode, mailingcountyfipscode, mailingforeignaddressind, documentnbr, recordingbook, recordingpage, hawaiilandcourtdocumentnbr, hawaiicertificatenbr, waexicenbr, documenttype, transactiontype, seller1name, seller1corpind, seller2name, seller2corpind, saleamt, salespricecode, transfertax, partialinterestflag, resaleflag,newconstructionflag, interfamilyflag, foreclosureflag, reosaleflag, firstmtgrecordingdate, firstmtgdocumentdate, firstmtgdocumentnbr, firstmtgbook, firstmtgpage, firstmtgdocumenttype, firstmtgamt, firstmtglendername, firstmtgloantranstype, firstmtgloantype, firstmtgtermcode, firstmtgterm, firstmtgduedate, firstmtginterestratetype, firstmtginterestrate, firstmtgestimatedinterestrateind, firstmtgsellercarrybackflag, firstmtgprivatepartylender, firstmtgconstructionloan, firstmtgrefiflag, firstmtgequityflag, firstmtghelocflag, firstmtgothersubordinateloanflag, firstmtgsecondhomerider, firstmtgcondominiumrider, firstmtgmultifamily4rider, firstmtgplannedunitdevelopmentrider, firstmtgassumabilityrider, firstmtgballoonrider, firstmtgbiweeklypaymentrider, firstmtgfixedstepraterider, firstmtggraduatedpaymentrider, firstmtgprepaymentrider, firstmtgrateimprovementrider, firstmtgadjustableraterider, firstmtgadjustablerateindex, firstmtgchangeindex, firstmtgfirstchangedatemonthday, firstmtgfirstchangedateyear, firstmtginterestonlyperiod, firstmtgmaximuminterestrate, firstmtgminimuminterestrate, firstmtgratechangefrequency, secondmtgrecordingdate, secondmtgdocumentdate, secondmtgdocumentnbr, secondmtgbook, secondmtgpage, secondmtgdocumenttype, secondmtgamt, secondmtglendername, secondmtgloantranstype, secondmtgloantype, secondmtgtermcode, secondmtgterm, secondmtgduedate, secondmtginterestratetype, secondmtginterestrate, secondmtgestimatedinterestrateind, secondmtgsellercarrybackflag, secondmtgprivatepartylender, secondmtgconstructionloan, secondmtgrefiflag, secondmtgequityflag, secondmtghelocflag, secondmtgothersubordinateloanflag, secondmtgsecondhomerider, secondmtgcondominiumrider, secondmtgmultifamily4rider, secondmtgplannedunitdevelopmentrider, secondmtgassumabilityrider, secondmtgballoonrider, secondmtgbiweeklypaymentrider, secondmtgfixedstepraterider, secondmtggraduatedpaymentrider, secondmtgprepaymentrider, secondmtgrateimprovementrider, secondmtgadjustableraterider, secondmtgadjustablerateindex, secondmtgchangeindex, secondmtgfirstchangedatemonthday, secondmtgfirstchangedateyear, secondmtginterestonlyperiod, secondmtgmaximuminterestrate, secondmtgminimuminterestrate, secondmtgratechangefrequency, lotcode, lotnbr, landlot, block, section, district, legalunit, municipality, subdivisionname, subdivisionphasenbr, subdivisiontractnbr, meridian, assessorsmapref, legaldescription, titlecompanyname, multiapn,fips, propertyid,fatimestamp, farecordtype,fips,propertyid, fatransactionid, cast(recordingdate as varchar(50)), saledate, 
+CMA,csa,buyerborrower1name, ClusterID_0_CMA, clusterid_1_bbn, clusterid_2_cma, clusterid_3_bbn,newfirstmtglendername,
+lead(cast(recordingdate as varchar(50))) OVER(PARTITION BY propertyid ORDER BY recordingdate) as nextrecordingdate
+FROM mi6_consolidated_refresh_newfirstmtglendername
+),  CTE2 as ( 
+select *, datediff(day, recordingdate, cast(nextrecordingdate as varchar(50))) as days_to_next_transaction,
+                                       CASE WHEN days_to_next_transaction <=730 THEN 'Fix & Flip'
+                                       WHEN days_to_next_transaction >730 THEN 'Rental'
+                                       ELSE 'Currently Owned' END as days_to_next_transaction_segmentation
+FROM mi6_consolidated_refresh_days_to_next_transaction_segmentation
+			)
+            select *, case when propertyid = ' ' then  null else nextrecordingdate end as nextrecordingdate2, 
+			case when days_to_next_transaction = '0' and propertyid =' ' then 'Currently Owned' 
+				else days_to_next_transaction_segmentation end as days_to_next_transaction_segmentation2 
+			from cte2    
+----------------------------------Arms_Lenght-------------------------------
+CREATE TABLE mi6_consolidated_refresh_arms_type2 AS WITH CTE AS 
+(
+select *,
+  CASE 
+    WHEN transactiontype = '1' 
+    and (fatransactionid LIKE '1%' 
+    or fatransactionid LIKE '6%') THEN 'Non-Arms Length'  
+    ELSE ' ' 
+    END as Armstype
+from mi6_consolidated_refresh_days_to_next_transaction_segmentation
+),cte2 as (select *,
+    CASE WHEN (Armstype = 'Non-Arms Length'  or  farecordtype = 'D' or saledate =' ')  THEN 'Exclude Transaction' ElSE 'Include Transaction' END days_to_next_transaction_include_flag 
+from CTE) select *, case when days_to_next_transaction_include_flag = 'Exclude Transaction' then ' ' else days_to_next_transaction_segmentation end as days_to_next_transaction_segmentation2 from cte2                           
+
+
+        
