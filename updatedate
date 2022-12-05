@@ -1,0 +1,8 @@
+UPDATE azureml.HSOZIP_2020 d
+SET d.`ZIP`=LPAD(d.`ZIP`, 5, '0')
+
+select *, LPAD(`ZIP`,5,'0') as ZIP1  from azureml.HSOZIP_2020
+
+update client_database.medgov_discussion  as d
+set d.date_dt  = STR_TO_DATE(d.`Created Date`, '%m/%d/%Y')
+where d.date_dt is null;
