@@ -1,0 +1,6 @@
+CREATE EVENT foi_text_group_concat
+    ON SCHEDULE
+      EVERY 1 MINUTE
+    COMMENT 'sets sessions for foi_tetx table each min.'
+    DO
+      SET SESSION  group_concat_max_len=4294967295;
