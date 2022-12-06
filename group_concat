@@ -1,0 +1,1 @@
+select *, GROUP_CONCAT(FOI_TEXT SEPARATOR '|') as concat_foi_text  from foitext f  GROUP BY MDR_REPORT_KEY limit 600000
